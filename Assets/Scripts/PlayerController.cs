@@ -4,19 +4,27 @@ using UnityEngine;
 
 public class PlayerController : MonoBehaviour
 {
-    
+    public ParticleSystem smokeParticles;
+    public ParticleSystem dirtParticles;
+    public AudioClip jumpSound;
+    public AudioClip crashSound;
+
     public float jumpForce = 10.0f;
     public float gravityModifier;
     public bool gameOver = false;
 
     private Rigidbody playerRb;
     private Animator playerAnim;
-    
+    private AudioSource playerAudioSource;
+
+    private float sfxVolume = 1.0f;
     private bool isOnGround = true;
     private void Start()
     {
         playerRb = GetComponent<Rigidbody>();
         playerAnim = GetComponent<Animator>();
+        playerAudioSource = GetComponent<AudioSource>();
+
         Physics.gravity *= gravityModifier;
     }
 
@@ -30,7 +38,9 @@ public class PlayerController : MonoBehaviour
             // And we are relying on the Physics of Unity to handle the fall down because gravity is enabled on the character
             playerRb.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
             playerAnim.SetTrigger("Jump_trig");
-             isOnGround = false;
+            isOnGround = false;
+            dirtParticles.Stop();
+            playerAudioSource.PlayOneShot(jumpSound, sfxVolume);
         }
     }
 
@@ -39,12 +49,17 @@ public class PlayerController : MonoBehaviour
         if (collision.collider.gameObject.CompareTag("Ground"))
         {
             isOnGround = true;
+            dirtParticles.Play();
         } else if (collision.collider.gameObject.CompareTag("Obstacle"))
         {
             gameOver = true;
+            playerAudioSource.PlayOneShot(crashSound, sfxVolume);
             playerAnim.SetBool("Death_b", true);
             playerAnim.SetInteger("DeathType_int", 1);
             Debug.Log("Game Over !");
+            smokeParticles.Play();
+            dirtParticles.Stop();
+
         }    
     }
 }
